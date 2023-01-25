@@ -18,23 +18,23 @@ navigator.mediaDevices.getUserMedia({
   });
 
 function background_removal(videoTrack) {
+  const selfieSegmentation = new SelfieSegmentation({
+        locateFile: (file) =>
+          `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+      });
+
+  selfieSegmentation.setOptions({
+    modelSelection: 1,
+    selfieMode: true,
+  });
+
+  selfieSegmentation.onResults(onResults);
+
   const trackProcessor = new MediaStreamTrackProcessor({ track: videoTrack });
   const trackGenerator = new MediaStreamTrackGenerator({ kind: 'video' });
 
   const transformer = new TransformStream({
     async transform(videoFrame, controller) {
-      const selfieSegmentation = new SelfieSegmentation({
-        locateFile: (file) =>
-          `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
-      });
-
-      selfieSegmentation.setOptions({
-        modelSelection: 1,
-        selfieMode: true,
-      });
-
-      selfieSegmentation.onResults(onResults);
-
       videoFrame.width = videoFrame.displayWidth;
       videoFrame.height = videoFrame.displayHeight;
       await selfieSegmentation.send({ image: videoFrame });
